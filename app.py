@@ -17,12 +17,16 @@ app.secret_key = os.getenv("SECRET_KEY", "troque-esta-chave")
 
 # ── Conexão PostgreSQL ──────────────────────────────────────────────
 def get_db():
+    url = os.getenv("DATABASE_URL")
+    if url:
+        return psycopg2.connect(url)
+    # Fallback local
     return psycopg2.connect(
-        dbname=os.getenv("POSTGRES_DB",       "railway"),
-        user=os.getenv("POSTGRES_USER",       "postgres"),
+        dbname=os.getenv("POSTGRES_DB", "railway"),
+        user=os.getenv("POSTGRES_USER", "postgres"),
         password=os.getenv("POSTGRES_PASSWORD"),
-        host=os.getenv("PGHOST",              "localhost"),
-        port=os.getenv("PGPORT",              "5432"),
+        host=os.getenv("PGHOST", "localhost"),
+        port=os.getenv("PGPORT", "5432"),
     )
 
 # ── Criar tabela automaticamente na inicialização ──────────────────
