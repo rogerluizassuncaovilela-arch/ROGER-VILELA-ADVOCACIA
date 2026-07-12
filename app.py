@@ -98,6 +98,9 @@ def enviar_email(dados):
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
             print(f"[EMAIL] Enviado. Status: {resp.status}")
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8")
+        print(f"[EMAIL ERROR] {e.code} {e.reason} — {body}")
     except Exception as e:
         print(f"[EMAIL ERROR] {e}")
 
