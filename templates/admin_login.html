@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Roger Vilela Advocacia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Lato', sans-serif; background: #1C1C1C; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card { background: #F5F0EA; padding: 3rem 2.5rem; width: 100%; max-width: 380px; }
+  h1 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: #1C1C1C; margin-bottom: 0.25rem; }
+  p { font-size: 0.82rem; color: #6B6460; margin-bottom: 2rem; }
+  label { display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6460; margin-bottom: 0.5rem; }
+  input { width: 100%; padding: 0.85rem 1rem; font-family: 'Lato', sans-serif; font-size: 0.95rem; border: 1px solid rgba(184,150,90,0.3); outline: none; background: #fff; margin-bottom: 1.25rem; }
+  input:focus { border-color: #B8965A; }
+  button { width: 100%; padding: 0.9rem; background: #B8965A; color: #fff; font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; border: none; cursor: pointer; }
+  button:hover { background: #8E6E3A; }
+  .erro { background: #fff0f0; border: 1px solid #e88; padding: 0.75rem 1rem; font-size: 0.85rem; color: #c0392b; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Painel Admin</h1>
+    <p>Roger Vilela Advocacia</p>
+    {% if erro %}<div class="erro">{{ erro }}</div>{% endif %}
+    <form method="POST">
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" name="senha" placeholder="Digite a senha" required autofocus>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>

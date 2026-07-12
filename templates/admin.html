@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mensagens — Roger Vilela Advocacia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Lato', sans-serif; background: #F5F0EA; color: #1C1C1C; }
+  header { background: #1C1C1C; border-bottom: 2px solid #B8965A; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-family: 'Playfair Display', serif; color: #fff; font-size: 1.2rem; }
+  .logo span { color: #B8965A; }
+  .header-right { display: flex; align-items: center; gap: 1.5rem; }
+  .header-right a { color: rgba(255,255,255,0.6); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; }
+  .header-right a:hover { color: #B8965A; }
+  main { max-width: 1100px; margin: 2.5rem auto; padding: 0 2rem; }
+  .page-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 0.25rem; }
+  .page-sub { font-size: 0.85rem; color: #6B6460; margin-bottom: 2rem; }
+  .stats { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
+  .stat { background: #fff; border-left: 3px solid #B8965A; padding: 1rem 1.5rem; }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #B8965A; }
+  .stat-label { font-size: 0.72rem; color: #6B6460; text-transform: uppercase; letter-spacing: 0.08em; }
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  thead { background: #1C1C1C; color: #fff; }
+  th { padding: 0.85rem 1rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-align: left; }
+  td { padding: 1rem; font-size: 0.88rem; border-bottom: 1px solid rgba(184,150,90,0.15); vertical-align: top; }
+  tr:hover td { background: #fafaf8; }
+  tr.nao-lido td { background: #fffdf7; font-weight: 400; }
+  tr.nao-lido td:first-child { border-left: 3px solid #B8965A; }
+  .area-badge { display: inline-block; background: #F5F0EA; border: 1px solid rgba(184,150,90,0.3); padding: 2px 8px; font-size: 0.72rem; color: #B8965A; }
+  .acoes { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .btn-sm { display: inline-block; padding: 4px 10px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; border: 1px solid; cursor: pointer; }
+  .btn-lido { color: #2ecc71; border-color: #2ecc71; }
+  .btn-lido:hover { background: #2ecc71; color: #fff; }
+  .btn-del { color: #e74c3c; border-color: #e74c3c; }
+  .btn-del:hover { background: #e74c3c; color: #fff; }
+  .data { font-size: 0.75rem; color: #aaa; white-space: nowrap; }
+  .vazio { text-align: center; padding: 4rem; color: #aaa; }
+  .badge-novo { display: inline-block; background: #B8965A; color: #fff; font-size: 0.6rem; padding: 2px 6px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-left: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Roger Vilela <span>·</span> Admin</div>
+  <div class="header-right">
+    <a href="/" target="_blank">Ver Site</a>
+    <a href="/admin/logout">Sair</a>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Mensagens Recebidas</h1>
+  <p class="page-sub">Formulário de contato do site</p>
+
+  {% set total = mensagens|length %}
+  {% set nao_lidas = mensagens|selectattr('lido', 'equalto', false)|list|length %}
+  <div class="stats">
+    <div class="stat"><div class="stat-num">{{ total }}</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num">{{ nao_lidas }}</div><div class="stat-label">Não lidas</div></div>
+    <div class="stat"><div class="stat-num">{{ total - nao_lidas }}</div><div class="stat-label">Lidas</div></div>
+  </div>
+
+  {% if mensagens %}
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Nome</th>
+        <th>Contato</th>
+        <th>Área</th>
+        <th>Mensagem</th>
+        <th>Data</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for m in mensagens %}
+      <tr class="{{ 'nao-lido' if not m.lido else '' }}">
+        <td>{{ m.id }}{% if not m.lido %}<span class="badge-novo">Novo</span>{% endif %}</td>
+        <td><strong>{{ m.nome }}</strong></td>
+        <td>
+          <a href="mailto:{{ m.email }}" style="color:#B8965A;text-decoration:none;">{{ m.email }}</a><br>
+          {% if m.telefone %}<span style="color:#6B6460;">{{ m.telefone }}</span>{% endif %}
+        </td>
+        <td>{% if m.area %}<span class="area-badge">{{ m.area }}</span>{% else %}—{% endif %}</td>
+        <td style="max-width:320px;">{{ m.mensagem }}</td>
+        <td class="data">{{ m.criado_em.strftime('%d/%m/%Y') }}<br>{{ m.criado_em.strftime('%H:%M') }}</td>
+        <td>
+          <div class="acoes">
+            {% if not m.lido %}
+            <a href="/admin/marcar-lido/{{ m.id }}" class="btn-sm btn-lido">Lido</a>
+            {% endif %}
+            <a href="/admin/deletar/{{ m.id }}" class="btn-sm btn-del" onclick="return confirm('Deletar esta mensagem?')">Deletar</a>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="vazio">Nenhuma mensagem recebida ainda.</div>
+  {% endif %}
+</main>
+</body>
+</html>
