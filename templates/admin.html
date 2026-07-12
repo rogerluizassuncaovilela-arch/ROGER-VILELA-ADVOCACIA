@@ -8,39 +8,128 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Lato', sans-serif; background: #F5F0EA; color: #1C1C1C; }
+
   header { background: #1C1C1C; border-bottom: 2px solid #B8965A; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
   .logo { font-family: 'Playfair Display', serif; color: #fff; font-size: 1.2rem; }
   .logo span { color: #B8965A; }
   .header-right { display: flex; align-items: center; gap: 1.5rem; }
   .header-right a { color: rgba(255,255,255,0.6); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; }
   .header-right a:hover { color: #B8965A; }
-  main { max-width: 1100px; margin: 2.5rem auto; padding: 0 2rem; }
+
+  main { max-width: 1200px; margin: 2.5rem auto; padding: 0 2rem; }
   .page-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 0.25rem; }
   .page-sub { font-size: 0.85rem; color: #6B6460; margin-bottom: 2rem; }
-  .stats { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
-  .stat { background: #fff; border-left: 3px solid #B8965A; padding: 1rem 1.5rem; }
+
+  .stats { display: flex; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .stat { background: #fff; border-left: 3px solid #B8965A; padding: 1rem 1.5rem; min-width: 120px; }
   .stat-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #B8965A; }
   .stat-label { font-size: 0.72rem; color: #6B6460; text-transform: uppercase; letter-spacing: 0.08em; }
+
   table { width: 100%; border-collapse: collapse; background: #fff; }
   thead { background: #1C1C1C; color: #fff; }
-  th { padding: 0.85rem 1rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-align: left; }
-  td { padding: 1rem; font-size: 0.88rem; border-bottom: 1px solid rgba(184,150,90,0.15); vertical-align: top; }
+  th { padding: 0.85rem 1rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-align: left; white-space: nowrap; }
+  td { padding: 1rem; font-size: 0.88rem; border-bottom: 1px solid rgba(184,150,90,0.15); vertical-align: middle; }
   tr:hover td { background: #fafaf8; }
-  tr.nao-lido td { background: #fffdf7; font-weight: 400; }
+  tr.nao-lido td { background: #fffdf7; }
   tr.nao-lido td:first-child { border-left: 3px solid #B8965A; }
-  .area-badge { display: inline-block; background: #F5F0EA; border: 1px solid rgba(184,150,90,0.3); padding: 2px 8px; font-size: 0.72rem; color: #B8965A; }
-  .acoes { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .btn-sm { display: inline-block; padding: 4px 10px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; border: 1px solid; cursor: pointer; }
-  .btn-lido { color: #2ecc71; border-color: #2ecc71; }
-  .btn-lido:hover { background: #2ecc71; color: #fff; }
-  .btn-del { color: #e74c3c; border-color: #e74c3c; }
-  .btn-del:hover { background: #e74c3c; color: #fff; }
-  .data { font-size: 0.75rem; color: #aaa; white-space: nowrap; }
-  .vazio { text-align: center; padding: 4rem; color: #aaa; }
+
+  .area-badge { display: inline-block; background: #F5F0EA; border: 1px solid rgba(184,150,90,0.3); padding: 2px 8px; font-size: 0.72rem; color: #B8965A; white-space: nowrap; }
   .badge-novo { display: inline-block; background: #B8965A; color: #fff; font-size: 0.6rem; padding: 2px 6px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-left: 6px; vertical-align: middle; }
+  .data { font-size: 0.75rem; color: #aaa; white-space: nowrap; }
+
+  .acoes { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .btn-sm { display: inline-block; padding: 5px 10px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; border: 1px solid; cursor: pointer; background: none; white-space: nowrap; transition: all 0.2s; }
+  .btn-ver   { color: #B8965A; border-color: #B8965A; }
+  .btn-ver:hover { background: #B8965A; color: #fff; }
+  .btn-lido  { color: #2ecc71; border-color: #2ecc71; }
+  .btn-lido:hover { background: #2ecc71; color: #fff; }
+  .btn-email { color: #3498db; border-color: #3498db; }
+  .btn-email:hover { background: #3498db; color: #fff; }
+  .btn-del   { color: #e74c3c; border-color: #e74c3c; }
+  .btn-del:hover { background: #e74c3c; color: #fff; }
+
+  .preview-msg { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #6B6460; font-size: 0.83rem; }
+  .vazio { text-align: center; padding: 4rem; color: #aaa; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    max-width: 620px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .modal-header {
+    background: #1C1C1C;
+    border-bottom: 2px solid #B8965A;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-title { font-family: 'Playfair Display', serif; color: #fff; font-size: 1.1rem; }
+  .modal-close {
+    background: none; border: none; color: rgba(255,255,255,0.6);
+    font-size: 1.5rem; cursor: pointer; line-height: 1; padding: 0 4px;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: #B8965A; }
+
+  .modal-body { padding: 1.75rem; }
+  .modal-field { margin-bottom: 1.25rem; }
+  .modal-label {
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #B8965A; margin-bottom: 0.35rem;
+  }
+  .modal-value {
+    font-size: 0.95rem; color: #1C1C1C; font-weight: 300;
+    line-height: 1.6;
+  }
+  .modal-value a { color: #B8965A; text-decoration: none; }
+  .modal-value a:hover { text-decoration: underline; }
+  .modal-mensagem {
+    background: #F5F0EA;
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+    color: #1C1C1C;
+    line-height: 1.75;
+    font-weight: 300;
+    white-space: pre-wrap;
+    border-left: 3px solid #B8965A;
+  }
+  .modal-footer {
+    border-top: 1px solid rgba(184,150,90,0.2);
+    padding: 1.25rem 1.75rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 2rem; }
+
+  @media (max-width: 600px) {
+    .modal-grid { grid-template-columns: 1fr; }
+    table { font-size: 0.8rem; }
+    th, td { padding: 0.6rem 0.5rem; }
+  }
 </style>
 </head>
 <body>
+
 <header>
   <div class="logo">Roger Vilela <span>·</span> Admin</div>
   <div class="header-right">
@@ -51,10 +140,10 @@
 
 <main>
   <h1 class="page-title">Mensagens Recebidas</h1>
-  <p class="page-sub">Formulário de contato do site</p>
+  <p class="page-sub">Formulário de contato do site — {{ "atualizado agora" }}</p>
 
-  {% set total = mensagens|length %}
-  {% set nao_lidas = mensagens|selectattr('lido', 'equalto', false)|list|length %}
+  {% set total     = mensagens|length %}
+  {% set nao_lidas = mensagens|selectattr('lido','equalto',false)|list|length %}
   <div class="stats">
     <div class="stat"><div class="stat-num">{{ total }}</div><div class="stat-label">Total</div></div>
     <div class="stat"><div class="stat-num">{{ nao_lidas }}</div><div class="stat-label">Não lidas</div></div>
@@ -67,9 +156,8 @@
       <tr>
         <th>#</th>
         <th>Nome</th>
-        <th>Contato</th>
         <th>Área</th>
-        <th>Mensagem</th>
+        <th>Mensagem (prévia)</th>
         <th>Data</th>
         <th>Ações</th>
       </tr>
@@ -77,21 +165,45 @@
     <tbody>
     {% for m in mensagens %}
       <tr class="{{ 'nao-lido' if not m.lido else '' }}">
-        <td>{{ m.id }}{% if not m.lido %}<span class="badge-novo">Novo</span>{% endif %}</td>
-        <td><strong>{{ m.nome }}</strong></td>
         <td>
-          <a href="mailto:{{ m.email }}" style="color:#B8965A;text-decoration:none;">{{ m.email }}</a><br>
-          {% if m.telefone %}<span style="color:#6B6460;">{{ m.telefone }}</span>{% endif %}
+          {{ m.id }}
+          {% if not m.lido %}<span class="badge-novo">Novo</span>{% endif %}
         </td>
-        <td>{% if m.area %}<span class="area-badge">{{ m.area }}</span>{% else %}—{% endif %}</td>
-        <td style="max-width:320px;">{{ m.mensagem }}</td>
-        <td class="data">{{ m.criado_em.strftime('%d/%m/%Y') }}<br>{{ m.criado_em.strftime('%H:%M') }}</td>
+        <td>
+          <strong>{{ m.nome }}</strong><br>
+          <span style="font-size:0.78rem;color:#6B6460;">{{ m.email }}</span>
+        </td>
+        <td>
+          {% if m.area %}<span class="area-badge">{{ m.area }}</span>{% else %}—{% endif %}
+        </td>
+        <td>
+          <div class="preview-msg">{{ m.mensagem }}</div>
+        </td>
+        <td class="data">
+          {{ m.criado_em.strftime('%d/%m/%Y') }}<br>
+          {{ m.criado_em.strftime('%H:%M') }}
+        </td>
         <td>
           <div class="acoes">
+            <button class="btn-sm btn-ver"
+              onclick="abrirModal(
+                '{{ m.id }}',
+                '{{ m.nome | replace("'", "\\'") }}',
+                '{{ m.email }}',
+                '{{ m.telefone or "—" }}',
+                '{{ m.area or "—" }}',
+                `{{ m.mensagem | replace('`', '\\`') | replace('\\', '\\\\') }}`,
+                '{{ m.criado_em.strftime("%d/%m/%Y às %H:%M") }}',
+                {{ 'false' if not m.lido else 'true' }}
+              )">
+              👁 Ver
+            </button>
             {% if not m.lido %}
-            <a href="/admin/marcar-lido/{{ m.id }}" class="btn-sm btn-lido">Lido</a>
+            <a href="/admin/marcar-lido/{{ m.id }}" class="btn-sm btn-lido">✓ Lido</a>
             {% endif %}
-            <a href="/admin/deletar/{{ m.id }}" class="btn-sm btn-del" onclick="return confirm('Deletar esta mensagem?')">Deletar</a>
+            <a href="mailto:{{ m.email }}" class="btn-sm btn-email">✉ Responder</a>
+            <a href="/admin/deletar/{{ m.id }}" class="btn-sm btn-del"
+               onclick="return confirm('Deletar esta mensagem permanentemente?')">✕ Deletar</a>
           </div>
         </td>
       </tr>
@@ -102,5 +214,103 @@
   <div class="vazio">Nenhuma mensagem recebida ainda.</div>
   {% endif %}
 </main>
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="modalOverlay" onclick="fecharModalFora(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitulo">Mensagem</span>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="modal-field">
+          <div class="modal-label">Nome</div>
+          <div class="modal-value" id="mNome"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">Área de interesse</div>
+          <div class="modal-value" id="mArea"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">E-mail</div>
+          <div class="modal-value" id="mEmail"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">Telefone</div>
+          <div class="modal-value" id="mTelefone"></div>
+        </div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Mensagem completa</div>
+        <div class="modal-mensagem" id="mMensagem"></div>
+      </div>
+      <div style="margin-top:1rem;">
+        <div class="modal-label">Recebido em</div>
+        <div class="modal-value" id="mData"></div>
+      </div>
+    </div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+  var modalId = null;
+
+  function abrirModal(id, nome, email, telefone, area, mensagem, data, lido) {
+    modalId = id;
+    document.getElementById('modalTitulo').textContent = 'Mensagem #' + id + ' — ' + nome;
+    document.getElementById('mNome').textContent      = nome;
+    document.getElementById('mEmail').innerHTML       = '<a href="mailto:' + email + '">' + email + '</a>';
+    document.getElementById('mTelefone').textContent  = telefone;
+    document.getElementById('mArea').textContent      = area;
+    document.getElementById('mMensagem').textContent  = mensagem;
+    document.getElementById('mData').textContent      = data;
+
+    var footer = document.getElementById('modalFooter');
+    footer.innerHTML = '';
+
+    if (!lido) {
+      var btnLido = document.createElement('a');
+      btnLido.href = '/admin/marcar-lido/' + id;
+      btnLido.className = 'btn-sm btn-lido';
+      btnLido.textContent = '✓ Marcar como lido';
+      footer.appendChild(btnLido);
+    }
+
+    var btnEmail = document.createElement('a');
+    btnEmail.href = 'mailto:' + email + '?subject=Re: Contato pelo site Roger Vilela Advocacia';
+    btnEmail.className = 'btn-sm btn-email';
+    btnEmail.textContent = '✉ Responder por e-mail';
+    footer.appendChild(btnEmail);
+
+    var btnDel = document.createElement('a');
+    btnDel.href = 'javascript:void(0)';
+    btnDel.className = 'btn-sm btn-del';
+    btnDel.textContent = '✕ Deletar';
+    btnDel.onclick = function() {
+      if (confirm('Deletar esta mensagem permanentemente?')) {
+        window.location.href = '/admin/deletar/' + id;
+      }
+    };
+    footer.appendChild(btnDel);
+
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function fecharModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function fecharModalFora(e) {
+    if (e.target === document.getElementById('modalOverlay')) fecharModal();
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') fecharModal();
+  });
+</script>
 </body>
 </html>
