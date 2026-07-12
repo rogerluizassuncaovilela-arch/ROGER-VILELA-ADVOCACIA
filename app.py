@@ -17,6 +17,11 @@ app.secret_key = os.getenv("SECRET_KEY", "troque-esta-chave")
 
 # ── Conexão PostgreSQL ──────────────────────────────────────────────
 def get_db():
+    # Railway injeta DATABASE_PRIVATE_URL automaticamente (rede privada, gratuita)
+    url = os.getenv("DATABASE_PRIVATE_URL") or os.getenv("DATABASE_URL")
+    if url:
+        return psycopg2.connect(url, sslmode="require")
+    # Fallback para uso local (.env com variaveis individuais)
     return psycopg2.connect(
         dbname=os.getenv("DB_NAME"),
         user=os.getenv("DB_USER"),
@@ -24,6 +29,33 @@ def get_db():
         host=os.getenv("DB_HOST", "localhost"),
         port=os.getenv("DB_PORT", "5432"),
     )
+
+# ── Criar tabela automaticamente na inicialização ──────────────────
+def init_db():
+    SQL = """
+        CREATE TABLE IF NOT EXISTS contatos (
+            id        SERIAL PRIMARY KEY,
+            nome      VARCHAR(200)  NOT NULL,
+            email     VARCHAR(200)  NOT NULL,
+            telefone  VARCHAR(50),
+            area      VARCHAR(100),
+            mensagem  TEXT          NOT NULL,
+            criado_em TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+            lido      BOOLEAN       DEFAULT FALSE
+        );
+    """
+    try:
+        conn = get_db()
+        cur  = conn.cursor()
+        cur.execute(SQL)
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("[DB] Tabela 'contatos' pronta.")
+    except Exception as e:
+        print(f"[DB INIT ERROR] {e}")
+
+init_db()
 
 # ── Envio de e-mail (Gmail SMTP) ────────────────────────────────────
 def enviar_email(dados):
