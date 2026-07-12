@@ -60,40 +60,31 @@ init_db()
 # ── Envio de e-mail (Gmail SMTP) ────────────────────────────────────
 def enviar_email(dados):
     try:
-        api_key     = os.getenv("RESEND_API_KEY")
-        destinatario = os.getenv("GMAIL_USER", "rogerluizassuncaovilela@gmail.com")
+        api_key = os.getenv("WEB3FORMS_KEY")
         if not api_key:
-            print("[EMAIL] RESEND_API_KEY ausente - e-mail ignorado.")
+            print("[EMAIL] WEB3FORMS_KEY ausente - e-mail ignorado.")
             return
 
-        corpo = f"""
-        <html><body style="font-family:Arial,sans-serif;color:#1C1C1C;">
-          <h2 style="color:#B8965A;">Nova mensagem pelo site</h2>
-          <table style="border-collapse:collapse;width:100%;border:1px solid #eee;">
-            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Nome</td><td style="padding:10px;">{dados['nome']}</td></tr>
-            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">E-mail</td><td style="padding:10px;">{dados['email']}</td></tr>
-            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Telefone</td><td style="padding:10px;">{dados.get('telefone','—')}</td></tr>
-            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Área</td><td style="padding:10px;">{dados.get('area','—')}</td></tr>
-            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;vertical-align:top;">Mensagem</td><td style="padding:10px;">{dados['mensagem']}</td></tr>
-          </table>
-          <p style="margin-top:20px;font-size:12px;color:#888;">Recebido em {datetime.now().strftime('%d/%m/%Y às %H:%M')}</p>
-        </body></html>
-        """
+        corpo = (
+            f"Nome: {dados['nome']}\n"
+            f"E-mail: {dados['email']}\n"
+            f"Telefone: {dados.get('telefone','—')}\n"
+            f"Área: {dados.get('area','—')}\n"
+            f"Mensagem: {dados['mensagem']}\n"
+            f"Recebido em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}"
+        )
 
         payload = json.dumps({
-            "from": "Roger Vilela Advocacia <onboarding@resend.dev>",
-            "to":   [destinatario],
-            "subject": f"[Site] Nova mensagem de {dados['nome']}",
-            "html": corpo
+            "access_key": api_key,
+            "subject":    f"[Site] Nova mensagem de {dados['nome']}",
+            "from_name":  "Roger Vilela Advocacia",
+            "message":    corpo
         }).encode("utf-8")
 
         req = urllib.request.Request(
-            "https://api.resend.com/emails",
+            "https://api.web3forms.com/submit",
             data=payload,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type":  "application/json"
-            },
+            headers={"Content-Type": "application/json"},
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
