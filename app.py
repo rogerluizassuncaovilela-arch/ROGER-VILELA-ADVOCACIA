@@ -1,5 +1,6 @@
 import os
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -59,9 +60,12 @@ init_db()
 # ── Envio de e-mail (Gmail SMTP) ────────────────────────────────────
 def enviar_email(dados):
     try:
-        remetente   = os.getenv("GMAIL_USER")
-        app_pass    = os.getenv("GMAIL_APP_PASSWORD")
-        destinatario = os.getenv("GMAIL_USER")
+        remetente    = os.getenv("GMAIL_USER")
+        app_pass     = os.getenv("GMAIL_APP_PASSWORD")
+        if not remetente or not app_pass:
+            print("[EMAIL] Credenciais ausentes - e-mail ignorado.")
+            return
+        destinatario = remetente
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"[Site] Nova mensagem de {dados['nome']}"
@@ -83,13 +87,12 @@ def enviar_email(dados):
         """
         msg.attach(MIMEText(corpo, "html"))
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as smtp:
             smtp.login(remetente, app_pass)
             smtp.sendmail(remetente, destinatario, msg.as_string())
-        return True
+        print(f"[EMAIL] Enviado com sucesso.")
     except Exception as e:
         print(f"[EMAIL ERROR] {e}")
-        return False
 
 # ── Decorator admin ─────────────────────────────────────────────────
 def requer_login(f):
@@ -140,7 +143,7 @@ def contato():
         print(f"[DB ERROR] {e}")
         return jsonify({"ok": False, "erro": "Erro ao salvar. Tente novamente."}), 500
 
-    enviar_email(dados)
+    threading.Thread(target=enviar_email, args=(dados,), daemon=True).start()
     return jsonify({"ok": True}), 200
 
 
