@@ -17,18 +17,26 @@ app.secret_key = os.getenv("SECRET_KEY", "troque-esta-chave")
 
 # ── Conexão PostgreSQL ──────────────────────────────────────────────
 def get_db():
-    # Railway injeta DATABASE_PRIVATE_URL automaticamente (rede privada, gratuita)
-    url = os.getenv("DATABASE_PRIVATE_URL") or os.getenv("DATABASE_URL")
+    url = (
+        os.getenv("DATABASE_PRIVATE_URL")
+        or os.getenv("DATABASE_URL")
+        or os.getenv("PGURL")
+    )
     if url:
         return psycopg2.connect(url, sslmode="require")
-    # Fallback para uso local (.env com variaveis individuais)
+    # Fallback individual
     return psycopg2.connect(
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", "5432"),
+        dbname=os.getenv("DB_NAME")   or os.getenv("PGDATABASE"),
+        user=os.getenv("DB_USER")     or os.getenv("PGUSER"),
+        password=os.getenv("DB_PASSWORD") or os.getenv("PGPASSWORD"),
+        host=os.getenv("DB_HOST")     or os.getenv("PGHOST", "localhost"),
+        port=os.getenv("DB_PORT")     or os.getenv("PGPORT", "5432"),
     )
+
+# ── Debug variaveis de ambiente ────────────────────────────────────
+print("[ENV] DATABASE_PRIVATE_URL:", os.getenv("DATABASE_PRIVATE_URL", "NAO_DEFINIDA"))
+print("[ENV] DATABASE_URL:", os.getenv("DATABASE_URL", "NAO_DEFINIDA"))
+print("[ENV] PGHOST:", os.getenv("PGHOST", "NAO_DEFINIDA"))
 
 # ── Criar tabela automaticamente na inicialização ──────────────────
 def init_db():
