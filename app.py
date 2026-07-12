@@ -1,8 +1,8 @@
 import os
-import smtplib
+import json
 import threading
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import urllib.request
+import urllib.error
 from datetime import datetime
 from functools import wraps
 
@@ -60,37 +60,44 @@ init_db()
 # ── Envio de e-mail (Gmail SMTP) ────────────────────────────────────
 def enviar_email(dados):
     try:
-        remetente    = os.getenv("GMAIL_USER")
-        app_pass     = os.getenv("GMAIL_APP_PASSWORD")
-        if not remetente or not app_pass:
-            print("[EMAIL] Credenciais ausentes - e-mail ignorado.")
+        api_key     = os.getenv("RESEND_API_KEY")
+        destinatario = os.getenv("GMAIL_USER", "rogerluizassuncaovilela@gmail.com")
+        if not api_key:
+            print("[EMAIL] RESEND_API_KEY ausente - e-mail ignorado.")
             return
-        destinatario = remetente
-
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"[Site] Nova mensagem de {dados['nome']}"
-        msg["From"]    = remetente
-        msg["To"]      = destinatario
 
         corpo = f"""
         <html><body style="font-family:Arial,sans-serif;color:#1C1C1C;">
           <h2 style="color:#B8965A;">Nova mensagem pelo site</h2>
-          <table style="border-collapse:collapse;width:100%;">
-            <tr><td style="padding:8px;font-weight:bold;">Nome</td><td style="padding:8px;">{dados['nome']}</td></tr>
-            <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;">E-mail</td><td style="padding:8px;">{dados['email']}</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;">Telefone</td><td style="padding:8px;">{dados.get('telefone','—')}</td></tr>
-            <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;">Área</td><td style="padding:8px;">{dados.get('area','—')}</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;vertical-align:top;">Mensagem</td><td style="padding:8px;">{dados['mensagem']}</td></tr>
+          <table style="border-collapse:collapse;width:100%;border:1px solid #eee;">
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Nome</td><td style="padding:10px;">{dados['nome']}</td></tr>
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">E-mail</td><td style="padding:10px;">{dados['email']}</td></tr>
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Telefone</td><td style="padding:10px;">{dados.get('telefone','—')}</td></tr>
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Área</td><td style="padding:10px;">{dados.get('area','—')}</td></tr>
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;vertical-align:top;">Mensagem</td><td style="padding:10px;">{dados['mensagem']}</td></tr>
           </table>
           <p style="margin-top:20px;font-size:12px;color:#888;">Recebido em {datetime.now().strftime('%d/%m/%Y às %H:%M')}</p>
         </body></html>
         """
-        msg.attach(MIMEText(corpo, "html"))
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as smtp:
-            smtp.login(remetente, app_pass)
-            smtp.sendmail(remetente, destinatario, msg.as_string())
-        print(f"[EMAIL] Enviado com sucesso.")
+        payload = json.dumps({
+            "from": "Roger Vilela Advocacia <onboarding@resend.dev>",
+            "to":   [destinatario],
+            "subject": f"[Site] Nova mensagem de {dados['nome']}",
+            "html": corpo
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type":  "application/json"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            print(f"[EMAIL] Enviado. Status: {resp.status}")
     except Exception as e:
         print(f"[EMAIL ERROR] {e}")
 
