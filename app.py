@@ -60,35 +60,44 @@ init_db()
 # ── Envio de e-mail (Gmail SMTP) ────────────────────────────────────
 def enviar_email(dados):
     try:
-        api_key = os.getenv("WEB3FORMS_KEY")
+        api_key = os.getenv("BREVO_API_KEY")
         if not api_key:
-            print("[EMAIL] WEB3FORMS_KEY ausente - e-mail ignorado.")
+            print("[EMAIL] BREVO_API_KEY ausente - e-mail ignorado.")
             return
 
-        corpo = (
-            f"Nome: {dados['nome']}\n"
-            f"E-mail: {dados['email']}\n"
-            f"Telefone: {dados.get('telefone','—')}\n"
-            f"Área: {dados.get('area','—')}\n"
-            f"Mensagem: {dados['mensagem']}\n"
-            f"Recebido em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}"
-        )
+        corpo_html = f"""
+        <html><body style="font-family:Arial,sans-serif;color:#1C1C1C;">
+          <h2 style="color:#B8965A;">Nova mensagem pelo site</h2>
+          <table style="border-collapse:collapse;width:100%;border:1px solid #eee;">
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Nome</td><td style="padding:10px;">{dados['nome']}</td></tr>
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">E-mail</td><td style="padding:10px;">{dados['email']}</td></tr>
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Telefone</td><td style="padding:10px;">{dados.get('telefone','—')}</td></tr>
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;">Área</td><td style="padding:10px;">{dados.get('area','—')}</td></tr>
+            <tr><td style="padding:10px;font-weight:bold;background:#f5f0ea;vertical-align:top;">Mensagem</td><td style="padding:10px;">{dados['mensagem']}</td></tr>
+          </table>
+          <p style="margin-top:20px;font-size:12px;color:#888;">Recebido em {datetime.now().strftime('%d/%m/%Y às %H:%M')}</p>
+        </body></html>
+        """
 
         payload = json.dumps({
-            "access_key": api_key,
-            "subject":    f"[Site] Nova mensagem de {dados['nome']}",
-            "from_name":  "Roger Vilela Advocacia",
-            "message":    corpo
+            "sender":   {"name": "Roger Vilela Advocacia", "email": "rogerluizassuncaovilela@gmail.com"},
+            "to":       [{"email": "rogerluizassuncaovilela@gmail.com", "name": "Dr. Roger Vilela"}],
+            "subject":  f"[Site] Nova mensagem de {dados['nome']}",
+            "htmlContent": corpo_html
         }).encode("utf-8")
 
         req = urllib.request.Request(
-            "https://api.web3forms.com/submit",
+            "https://api.brevo.com/v3/smtp/email",
             data=payload,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "api-key":      api_key,
+                "Content-Type": "application/json",
+                "Accept":       "application/json"
+            },
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
-            print(f"[EMAIL] Enviado. Status: {resp.status}")
+            print(f"[EMAIL] Enviado via Brevo. Status: {resp.status}")
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8")
         print(f"[EMAIL ERROR] {e.code} {e.reason} — {body}")
@@ -211,6 +220,38 @@ def deletar(id):
     except Exception as e:
         print(f"[DB ERROR] {e}")
     return redirect(url_for("admin_painel"))
+
+
+# ── Google Search Console Verification ─────────────────────────────
+@app.route("/googlee6ac8beeef971233.html")
+def google_verify():
+    from flask import Response
+    return Response(
+        "google-site-verification: googlee6ac8beeef971233.html",
+        mimetype="text/html"
+    )
+
+# ── SEO: Sitemap e Robots ───────────────────────────────────────────
+@app.route("/sitemap.xml")
+def sitemap():
+    from flask import Response
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://rogervilelaadvocacia.up.railway.app/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>"""
+    return Response(xml, mimetype="application/xml")
+
+@app.route("/robots.txt")
+def robots():
+    from flask import Response
+    txt = """User-agent: *
+Allow: /
+Sitemap: https://rogervilelaadvocacia.up.railway.app/sitemap.xml"""
+    return Response(txt, mimetype="text/plain")
 
 
 if __name__ == "__main__":
