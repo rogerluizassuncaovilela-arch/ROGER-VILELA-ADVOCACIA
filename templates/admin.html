@@ -133,6 +133,7 @@
 <header>
   <div class="logo">Roger Vilela <span>·</span> Admin</div>
   <div class="header-right">
+    <a href="/admin/artigos">✍ Artigos</a>
     <a href="/" target="_blank">Ver Site</a>
     <a href="/admin/logout">Sair</a>
   </div>
@@ -148,6 +149,10 @@
     <div class="stat"><div class="stat-num">{{ total }}</div><div class="stat-label">Total</div></div>
     <div class="stat"><div class="stat-num">{{ nao_lidas }}</div><div class="stat-label">Não lidas</div></div>
     <div class="stat"><div class="stat-num">{{ total - nao_lidas }}</div><div class="stat-label">Lidas</div></div>
+    <div class="stat" style="border-left-color:#3498db;cursor:pointer;" onclick="window.location='/admin/artigos'">
+      <div class="stat-num" style="color:#3498db;">✍</div>
+      <div class="stat-label">Gerenciar Artigos</div>
+    </div>
   </div>
 
   {% if mensagens %}
