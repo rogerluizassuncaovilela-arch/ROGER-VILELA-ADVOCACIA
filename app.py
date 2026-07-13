@@ -236,6 +236,21 @@ def deletar(id):
     return redirect(url_for("admin_painel"))
 
 
+# ── API: Último artigo para popup ───────────────────────────────────
+@app.route("/api/ultimo-artigo")
+def api_ultimo_artigo():
+    from flask import Response
+    try:
+        conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT id, titulo, slug, resumo, categoria, imagem_url FROM artigos WHERE publicado=TRUE ORDER BY criado_em DESC LIMIT 1")
+        post = cur.fetchone(); cur.close(); conn.close()
+        if post:
+            import json as _json
+            return Response(_json.dumps(dict(post)), mimetype="application/json")
+    except Exception as e:
+        print(f"[API ERROR] {e}")
+    return Response('{}', mimetype="application/json")
+
 # ── Google Search Console Verification ─────────────────────────────
 @app.route("/googlee6ac8beeef971233.html")
 def google_verify():

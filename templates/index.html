@@ -1379,6 +1379,82 @@
   </div>
 </section>
 
+
+<!-- ── POPUP ARTIGO ── -->
+<div id="artigo-popup" style="
+  display:none;
+  position:fixed;
+  bottom:2rem;
+  right:2rem;
+  width:320px;
+  background:#fff;
+  border-top:3px solid var(--gold);
+  box-shadow:0 8px 40px rgba(0,0,0,0.15);
+  z-index:9999;
+  animation:slideInPopup 0.4s ease;
+">
+  <div style="padding:1.25rem 1.25rem 0;display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
+    <div>
+      <p id="popup-cat" style="font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;"></p>
+      <p style="font-size:0.7rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);">📰 Novo Artigo</p>
+    </div>
+    <button onclick="fecharPopup()" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:1.2rem;line-height:1;padding:0;flex-shrink:0;" aria-label="Fechar">×</button>
+  </div>
+  <div style="padding:0.75rem 1.25rem 1.25rem;">
+    <h4 id="popup-titulo" style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--dark);line-height:1.3;margin-bottom:0.75rem;"></h4>
+    <p id="popup-resumo" style="font-size:0.8rem;font-weight:300;color:var(--text-muted);line-height:1.6;margin-bottom:1rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"></p>
+    <a id="popup-link" href="#" target="_blank" style="display:inline-block;background:var(--gold);color:#fff;padding:0.6rem 1.25rem;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;transition:background 0.3s;">Ler artigo →</a>
+  </div>
+</div>
+
+<style>
+@keyframes slideInPopup {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@media(max-width:480px){
+  #artigo-popup { width:calc(100% - 2rem); right:1rem; bottom:1rem; }
+}
+</style>
+
+<script>
+function fecharPopup() {
+  var popup = document.getElementById('artigo-popup');
+  popup.style.animation = 'none';
+  popup.style.opacity = '0';
+  popup.style.transform = 'translateY(20px)';
+  popup.style.transition = 'all 0.3s ease';
+  setTimeout(function(){ popup.style.display = 'none'; }, 300);
+  // Não mostrar de novo por 24h
+  localStorage.setItem('popup_fechado', Date.now());
+}
+
+function mostrarPopup(post) {
+  if (!post || !post.titulo) return;
+  // Verificar se fechou nas últimas 24h
+  var fechado = localStorage.getItem('popup_fechado');
+  if (fechado && (Date.now() - parseInt(fechado)) < 86400000) return;
+
+  document.getElementById('popup-titulo').textContent  = post.titulo;
+  document.getElementById('popup-resumo').textContent  = post.resumo || '';
+  document.getElementById('popup-link').href           = '/artigos/' + post.slug;
+  if (post.categoria) {
+    document.getElementById('popup-cat').textContent = post.categoria;
+  }
+
+  setTimeout(function() {
+    var popup = document.getElementById('artigo-popup');
+    popup.style.display = 'block';
+  }, 5000); // aparece após 5 segundos
+}
+
+// Buscar último artigo
+fetch('/api/ultimo-artigo')
+  .then(function(r){ return r.json(); })
+  .then(function(post){ mostrarPopup(post); })
+  .catch(function(){});
+</script>
+
 </main>
 
 <!-- ══ FOOTER ══ -->
