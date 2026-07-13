@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ 'Editar' if post else 'Novo' }} Artigo — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Lato',sans-serif; background:#F5F0EA; color:#1C1C1C; }
+  header { background:#1C1C1C; border-bottom:2px solid #B8965A; padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+  .logo { font-family:'Playfair Display',serif; color:#fff; font-size:1.2rem; }
+  .logo span { color:#B8965A; }
+  nav a { color:rgba(255,255,255,0.6); font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; margin-left:1.5rem; }
+  nav a:hover { color:#B8965A; }
+
+  main { max-width:900px; margin:2.5rem auto; padding:0 2rem 4rem; }
+  .page-title { font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:0.25rem; }
+  .page-sub { font-size:0.85rem; color:#6B6460; margin-bottom:2rem; }
+
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+  .form-full { grid-column:1/-1; }
+  .form-group { margin-bottom:0; }
+  label { display:block; font-size:0.7rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#6B6460; margin-bottom:0.5rem; }
+  input[type=text], input[type=url], select, textarea {
+    width:100%; padding:0.85rem 1rem; font-family:'Lato',sans-serif; font-size:0.95rem;
+    color:#1C1C1C; background:#fff; border:1px solid rgba(184,150,90,0.3); outline:none; transition:border-color 0.3s;
+  }
+  input:focus, select:focus, textarea:focus { border-color:#B8965A; }
+  textarea { resize:vertical; min-height:80px; }
+
+  /* Quill editor */
+  .editor-label { font-size:0.7rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#6B6460; margin-bottom:0.5rem; display:block; }
+  #editor { background:#fff; min-height:380px; font-family:'Lato',sans-serif; font-size:1rem; }
+  .ql-toolbar { background:#fff; border-color:rgba(184,150,90,0.3) !important; border-bottom-color:rgba(184,150,90,0.2) !important; }
+  .ql-container { border-color:rgba(184,150,90,0.3) !important; font-family:'Lato',sans-serif !important; font-size:1rem !important; }
+  .ql-editor { min-height:350px; line-height:1.75; }
+
+  /* Publicar toggle */
+  .publish-bar {
+    display:flex; align-items:center; justify-content:space-between;
+    background:#fff; padding:1.25rem 1.5rem; border:1px solid rgba(184,150,90,0.3);
+    margin-top:1.25rem; flex-wrap:wrap; gap:1rem;
+  }
+  .toggle-wrap { display:flex; align-items:center; gap:0.75rem; }
+  .toggle-label { font-size:0.82rem; font-weight:700; color:#1C1C1C; }
+  .toggle { position:relative; width:48px; height:26px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .slider { position:absolute; inset:0; background:#ccc; border-radius:26px; cursor:pointer; transition:0.3s; }
+  .slider:before { content:''; position:absolute; width:20px; height:20px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
+  input:checked + .slider { background:#B8965A; }
+  input:checked + .slider:before { transform:translateX(22px); }
+
+  .btn-actions { display:flex; gap:0.75rem; }
+  .btn-save { background:#B8965A; color:#fff; padding:0.85rem 2rem; font-size:0.78rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; border:none; cursor:pointer; transition:background 0.3s; }
+  .btn-save:hover { background:#8E6E3A; }
+  .btn-cancel { background:none; color:#6B6460; padding:0.85rem 1.5rem; font-size:0.78rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; border:1px solid #ccc; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; }
+  .btn-cancel:hover { border-color:#B8965A; color:#B8965A; }
+
+  .tip { font-size:0.72rem; color:#aaa; margin-top:0.4rem; }
+
+  @media(max-width:768px) { .form-grid { grid-template-columns:1fr; } nav { display:none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Roger Vilela <span>·</span> Admin</div>
+  <nav>
+    <a href="/admin">Mensagens</a>
+    <a href="/admin/artigos">Artigos</a>
+    <a href="/admin/logout">Sair</a>
+  </nav>
+</header>
+
+<main>
+  <h1 class="page-title">{{ 'Editar Artigo' if post else 'Novo Artigo' }}</h1>
+  <p class="page-sub">{{ 'Atualize o conteúdo e salve.' if post else 'Preencha os campos e publique.' }}</p>
+
+  <form method="POST" action="{{ '/admin/artigos/atualizar/' + post.id|string if post else '/admin/artigos/criar' }}" id="artigo-form">
+
+    <div class="form-grid">
+      <div class="form-group form-full">
+        <label for="titulo">Título do artigo *</label>
+        <input type="text" id="titulo" name="titulo" value="{{ post.titulo if post else '' }}" placeholder="Ex: Seus direitos ao ser cobrado indevidamente" required>
+      </div>
+
+      <div class="form-group">
+        <label for="categoria">Categoria</label>
+        <select id="categoria" name="categoria">
+          <option value="">Selecione</option>
+          {% set cats = ['Direito do Consumidor','Direito Criminal','Direito de Família','Direito Previdenciário','Dicas Jurídicas'] %}
+          {% for c in cats %}
+          <option value="{{ c }}" {{ 'selected' if post and post.categoria == c else '' }}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="imagem_url">URL da imagem de capa</label>
+        <input type="url" id="imagem_url" name="imagem_url" value="{{ post.imagem_url if post else '' }}" placeholder="https://...">
+        <p class="tip">Cole o link de uma imagem (use imgbb.com para hospedar grátis)</p>
+      </div>
+
+      <div class="form-group form-full">
+        <label for="resumo">Resumo (aparece na listagem)</label>
+        <textarea id="resumo" name="resumo" rows="3" placeholder="Breve descrição do artigo...">{{ post.resumo if post else '' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Rich text editor -->
+    <div style="margin-top:1.25rem;">
+      <span class="editor-label">Conteúdo do artigo *</span>
+      <div id="editor">{{ post.conteudo | safe if post else '' }}</div>
+      <input type="hidden" id="conteudo" name="conteudo">
+    </div>
+
+    <!-- Publish + Save -->
+    <div class="publish-bar">
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" name="publicado" id="publicado" {{ 'checked' if post and post.publicado else '' }}>
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label" id="toggle-label">{{ 'Publicado' if post and post.publicado else 'Rascunho' }}</span>
+      </div>
+      <div class="btn-actions">
+        <a href="/admin/artigos" class="btn-cancel">Cancelar</a>
+        <button type="submit" class="btn-save">Salvar Artigo</button>
+      </div>
+    </div>
+
+  </form>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+<script>
+  var quill = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        ['blockquote', 'link'],
+        ['clean']
+      ]
+    },
+    placeholder: 'Escreva o conteúdo do artigo aqui...'
+  });
+
+  // Toggle label
+  document.getElementById('publicado').addEventListener('change', function() {
+    document.getElementById('toggle-label').textContent = this.checked ? 'Publicado' : 'Rascunho';
+  });
+
+  // Inject Quill HTML into hidden input before submit
+  document.getElementById('artigo-form').addEventListener('submit', function() {
+    document.getElementById('conteudo').value = quill.root.innerHTML;
+  });
+</script>
+</body>
+</html>

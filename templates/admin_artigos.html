@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artigos — Admin | Roger Vilela Advocacia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Lato',sans-serif; background:#F5F0EA; color:#1C1C1C; }
+  header { background:#1C1C1C; border-bottom:2px solid #B8965A; padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+  .logo { font-family:'Playfair Display',serif; color:#fff; font-size:1.2rem; }
+  .logo span { color:#B8965A; }
+  nav a { color:rgba(255,255,255,0.6); font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; margin-left:1.5rem; }
+  nav a:hover { color:#B8965A; }
+  main { max-width:1100px; margin:2.5rem auto; padding:0 2rem; }
+  .top { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+  .page-title { font-family:'Playfair Display',serif; font-size:1.8rem; }
+  .btn-novo { background:#B8965A; color:#fff; padding:0.75rem 1.5rem; font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; display:inline-block; }
+  .btn-novo:hover { background:#8E6E3A; }
+  table { width:100%; border-collapse:collapse; background:#fff; }
+  thead { background:#1C1C1C; color:#fff; }
+  th { padding:0.85rem 1rem; font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; text-align:left; }
+  td { padding:0.9rem 1rem; font-size:0.88rem; border-bottom:1px solid rgba(184,150,90,0.15); vertical-align:middle; }
+  tr:hover td { background:#fafaf8; }
+  .badge { display:inline-block; padding:3px 10px; font-size:0.68rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
+  .badge-pub { background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32; }
+  .badge-ras { background:#fff3e0; color:#e65100; border:1px solid #e65100; }
+  .acoes { display:flex; gap:0.4rem; flex-wrap:wrap; }
+  .btn-sm { display:inline-block; padding:4px 10px; font-size:0.7rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; text-decoration:none; border:1px solid; transition:all 0.2s; }
+  .btn-edit { color:#B8965A; border-color:#B8965A; }
+  .btn-edit:hover { background:#B8965A; color:#fff; }
+  .btn-pub { color:#2ecc71; border-color:#2ecc71; }
+  .btn-pub:hover { background:#2ecc71; color:#fff; }
+  .btn-view { color:#3498db; border-color:#3498db; }
+  .btn-view:hover { background:#3498db; color:#fff; }
+  .btn-del { color:#e74c3c; border-color:#e74c3c; }
+  .btn-del:hover { background:#e74c3c; color:#fff; }
+  .vazio { text-align:center; padding:4rem; color:#aaa; }
+  .titulo-cell { max-width:280px; }
+  .titulo-cell strong { display:block; }
+  .titulo-cell span { font-size:0.75rem; color:#aaa; }
+  @media(max-width:768px){ table { font-size:0.8rem; } th,td { padding:0.6rem 0.5rem; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Roger Vilela <span>·</span> Admin</div>
+  <nav>
+    <a href="/admin">Mensagens</a>
+    <a href="/artigos" target="_blank">Ver Site</a>
+    <a href="/admin/logout">Sair</a>
+  </nav>
+</header>
+<main>
+  <div class="top">
+    <div>
+      <h1 class="page-title">Artigos</h1>
+      <p style="font-size:0.85rem;color:#6B6460;margin-top:0.25rem;">{{ posts|length }} artigo(s) cadastrado(s)</p>
+    </div>
+    <a href="/admin/artigos/novo" class="btn-novo">+ Novo Artigo</a>
+  </div>
+
+  {% if posts %}
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Título</th>
+        <th>Categoria</th>
+        <th>Status</th>
+        <th>Data</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for p in posts %}
+    <tr>
+      <td>{{ p.id }}</td>
+      <td class="titulo-cell">
+        <strong>{{ p.titulo }}</strong>
+        <span>/artigos/{{ p.slug }}</span>
+      </td>
+      <td>{{ p.categoria or '—' }}</td>
+      <td>
+        {% if p.publicado %}
+          <span class="badge badge-pub">Publicado</span>
+        {% else %}
+          <span class="badge badge-ras">Rascunho</span>
+        {% endif %}
+      </td>
+      <td style="font-size:0.75rem;color:#aaa;white-space:nowrap;">{{ p.criado_em.strftime('%d/%m/%Y') }}</td>
+      <td>
+        <div class="acoes">
+          <a href="/admin/artigos/editar/{{ p.id }}" class="btn-sm btn-edit">✏ Editar</a>
+          <a href="/admin/artigos/publicar/{{ p.id }}" class="btn-sm btn-pub">
+            {{ '↙ Despublicar' if p.publicado else '↗ Publicar' }}
+          </a>
+          {% if p.publicado %}
+          <a href="/artigos/{{ p.slug }}" target="_blank" class="btn-sm btn-view">👁 Ver</a>
+          {% endif %}
+          <a href="/admin/artigos/deletar/{{ p.id }}" class="btn-sm btn-del"
+             onclick="return confirm('Deletar este artigo permanentemente?')">✕</a>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="vazio">Nenhum artigo ainda. <a href="/admin/artigos/novo" style="color:#B8965A;">Criar o primeiro →</a></div>
+  {% endif %}
+</main>
+</body>
+</html>

@@ -1,6 +1,8 @@
 import os
+import re
 import json
 import threading
+import unicodedata
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -42,6 +44,18 @@ def init_db():
             mensagem  TEXT          NOT NULL,
             criado_em TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
             lido      BOOLEAN       DEFAULT FALSE
+        );
+        CREATE TABLE IF NOT EXISTS artigos (
+            id           SERIAL PRIMARY KEY,
+            titulo       VARCHAR(300) NOT NULL,
+            slug         VARCHAR(300) UNIQUE NOT NULL,
+            resumo       VARCHAR(500),
+            conteudo     TEXT         NOT NULL,
+            imagem_url   VARCHAR(500),
+            categoria    VARCHAR(100),
+            publicado    BOOLEAN      DEFAULT FALSE,
+            criado_em    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+            atualizado_em TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
         );
     """
     try:
@@ -230,6 +244,130 @@ def google_verify():
         "google-site-verification: googlee6ac8beeef971233.html",
         mimetype="text/html"
     )
+
+# ── Slug ────────────────────────────────────────────────────────────
+def slugify(text):
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    text = re.sub(r"[^\w\s-]", "", text).strip().lower()
+    return re.sub(r"[\s_-]+", "-", text)
+
+# ── Artigos (público) ────────────────────────────────────────────────
+@app.route("/artigos")
+def artigos():
+    try:
+        conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM artigos WHERE publicado=TRUE ORDER BY criado_em DESC")
+        posts = cur.fetchall(); cur.close(); conn.close()
+    except: posts = []
+    return render_template("artigos.html", posts=posts)
+
+@app.route("/artigos/<slug>")
+def artigo(slug):
+    try:
+        conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM artigos WHERE slug=%s AND publicado=TRUE", (slug,))
+        post = cur.fetchone(); cur.close(); conn.close()
+    except: post = None
+    if not post:
+        return "Artigo não encontrado.", 404
+    return render_template("artigo.html", post=post)
+
+# ── Artigos (admin) ──────────────────────────────────────────────────
+@app.route("/admin/artigos")
+@requer_login
+def admin_artigos():
+    try:
+        conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM artigos ORDER BY criado_em DESC")
+        posts = cur.fetchall(); cur.close(); conn.close()
+    except: posts = []
+    return render_template("admin_artigos.html", posts=posts)
+
+@app.route("/admin/artigos/novo")
+@requer_login
+def admin_artigo_novo():
+    return render_template("admin_artigo_form.html", post=None)
+
+@app.route("/admin/artigos/criar", methods=["POST"])
+@requer_login
+def admin_artigo_criar():
+    titulo    = request.form.get("titulo", "").strip()
+    conteudo  = request.form.get("conteudo", "").strip()
+    resumo    = request.form.get("resumo", "").strip()
+    imagem    = request.form.get("imagem_url", "").strip()
+    categoria = request.form.get("categoria", "").strip()
+    publicado = request.form.get("publicado") == "on"
+    slug      = slugify(titulo)
+    if not titulo or not conteudo:
+        return redirect(url_for("admin_artigo_novo"))
+    try:
+        conn = get_db(); cur = conn.cursor()
+        # ensure unique slug
+        base = slug; i = 1
+        while True:
+            cur.execute("SELECT id FROM artigos WHERE slug=%s", (slug,))
+            if not cur.fetchone(): break
+            slug = f"{base}-{i}"; i += 1
+        cur.execute(
+            "INSERT INTO artigos (titulo,slug,resumo,conteudo,imagem_url,categoria,publicado) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+            (titulo, slug, resumo, conteudo, imagem, categoria, publicado)
+        )
+        conn.commit(); cur.close(); conn.close()
+    except Exception as e:
+        print(f"[ARTIGO ERROR] {e}")
+    return redirect(url_for("admin_artigos"))
+
+@app.route("/admin/artigos/editar/<int:id>")
+@requer_login
+def admin_artigo_editar(id):
+    try:
+        conn = get_db(); cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM artigos WHERE id=%s", (id,))
+        post = cur.fetchone(); cur.close(); conn.close()
+    except: post = None
+    return render_template("admin_artigo_form.html", post=post)
+
+@app.route("/admin/artigos/atualizar/<int:id>", methods=["POST"])
+@requer_login
+def admin_artigo_atualizar(id):
+    titulo    = request.form.get("titulo", "").strip()
+    conteudo  = request.form.get("conteudo", "").strip()
+    resumo    = request.form.get("resumo", "").strip()
+    imagem    = request.form.get("imagem_url", "").strip()
+    categoria = request.form.get("categoria", "").strip()
+    publicado = request.form.get("publicado") == "on"
+    try:
+        conn = get_db(); cur = conn.cursor()
+        cur.execute(
+            "UPDATE artigos SET titulo=%s,resumo=%s,conteudo=%s,imagem_url=%s,categoria=%s,publicado=%s,atualizado_em=NOW() WHERE id=%s",
+            (titulo, resumo, conteudo, imagem, categoria, publicado, id)
+        )
+        conn.commit(); cur.close(); conn.close()
+    except Exception as e:
+        print(f"[ARTIGO ERROR] {e}")
+    return redirect(url_for("admin_artigos"))
+
+@app.route("/admin/artigos/publicar/<int:id>")
+@requer_login
+def admin_artigo_publicar(id):
+    try:
+        conn = get_db(); cur = conn.cursor()
+        cur.execute("UPDATE artigos SET publicado = NOT publicado WHERE id=%s", (id,))
+        conn.commit(); cur.close(); conn.close()
+    except Exception as e:
+        print(f"[ARTIGO ERROR] {e}")
+    return redirect(url_for("admin_artigos"))
+
+@app.route("/admin/artigos/deletar/<int:id>")
+@requer_login
+def admin_artigo_deletar(id):
+    try:
+        conn = get_db(); cur = conn.cursor()
+        cur.execute("DELETE FROM artigos WHERE id=%s", (id,))
+        conn.commit(); cur.close(); conn.close()
+    except Exception as e:
+        print(f"[ARTIGO ERROR] {e}")
+    return redirect(url_for("admin_artigos"))
 
 # ── SEO: Sitemap e Robots ───────────────────────────────────────────
 @app.route("/sitemap.xml")
