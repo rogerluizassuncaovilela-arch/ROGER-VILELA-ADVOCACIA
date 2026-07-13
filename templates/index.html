@@ -1418,40 +1418,57 @@
 </style>
 
 <script>
+var _popupArtigos = [];
+var _popupIndice  = 0;
+var _popupTimer   = null;
+
 function fecharPopup() {
   var popup = document.getElementById('artigo-popup');
-  popup.style.animation = 'none';
-  popup.style.opacity = '0';
+  popup.style.opacity   = '0';
   popup.style.transform = 'translateY(20px)';
   popup.style.transition = 'all 0.3s ease';
   setTimeout(function(){ popup.style.display = 'none'; }, 300);
-  // Não mostrar de novo por 24h
-  localStorage.setItem('popup_fechado', Date.now());
-}
 
-function mostrarPopup(post) {
-  if (!post || !post.titulo) return;
-  // Verificar se fechou nas últimas 24h
-  var fechado = localStorage.getItem('popup_fechado');
-  if (fechado && (Date.now() - parseInt(fechado)) < 86400000) return;
-
-  document.getElementById('popup-titulo').textContent  = post.titulo;
-  document.getElementById('popup-resumo').textContent  = post.resumo || '';
-  document.getElementById('popup-link').href           = '/artigos/' + post.slug;
-  if (post.categoria) {
-    document.getElementById('popup-cat').textContent = post.categoria;
+  // Avança para o próximo artigo e agenda para 2 minutos
+  _popupIndice = (_popupIndice + 1) % _popupArtigos.length;
+  if (_popupArtigos.length > 1) {
+    _popupTimer = setTimeout(function(){ exibirPopup(_popupIndice); }, 120000);
   }
-
-  setTimeout(function() {
-    var popup = document.getElementById('artigo-popup');
-    popup.style.display = 'block';
-  }, 5000); // aparece após 5 segundos
 }
 
-// Buscar último artigo
-fetch('/api/ultimo-artigo')
+function exibirPopup(indice) {
+  var post  = _popupArtigos[indice];
+  if (!post || !post.titulo) return;
+  var popup = document.getElementById('artigo-popup');
+
+  // Preenche conteúdo
+  document.getElementById('popup-titulo').textContent = post.titulo;
+  document.getElementById('popup-resumo').textContent = post.resumo || '';
+  document.getElementById('popup-link').href          = '/artigos/' + post.slug;
+  document.getElementById('popup-cat').textContent    = post.categoria || '';
+
+  // Mostra com animação
+  popup.style.display    = 'block';
+  popup.style.opacity    = '0';
+  popup.style.transform  = 'translateY(20px)';
+  popup.style.transition = 'none';
+  setTimeout(function(){
+    popup.style.transition = 'all 0.4s ease';
+    popup.style.opacity    = '1';
+    popup.style.transform  = 'translateY(0)';
+  }, 30);
+}
+
+// Buscar todos os artigos
+fetch('/api/artigos-popup')
   .then(function(r){ return r.json(); })
-  .then(function(post){ mostrarPopup(post); })
+  .then(function(posts){
+    if (!posts || posts.length === 0) return;
+    _popupArtigos = posts;
+    _popupIndice  = 0;
+    // Primeiro popup aparece após 5 segundos
+    setTimeout(function(){ exibirPopup(0); }, 5000);
+  })
   .catch(function(){});
 </script>
 
